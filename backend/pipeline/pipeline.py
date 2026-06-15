@@ -1,7 +1,7 @@
-"""End-to-end Sufi -> Techno conversion pipeline.
+"""End-to-end Sacred -> Techno conversion pipeline.
 
 1. Extract BPM/key from the uploaded clip.
-2. Isolate the vocal (chant) stem with Demucs.
+2. Isolate the vocal stem with Demucs.
 3. Build a concept-specific MusicGen prompt from the extracted key + the
    concept's target BPM.
 4. Generate a techno instrumental conditioned on the vocal melody.

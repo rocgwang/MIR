@@ -1,4 +1,4 @@
-"""FastAPI service that wraps the Sufi -> Techno conversion pipeline.
+"""FastAPI service that wraps the Sacred -> Techno conversion pipeline.
 
 Run with (GPU required):
     uvicorn app:app --host 0.0.0.0 --port 8000

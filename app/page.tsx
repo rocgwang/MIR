@@ -111,16 +111,16 @@ export default function Home() {
     <main className="min-h-screen bg-[#050816] text-zinc-100 flex flex-col items-center px-6 py-16 gap-14">
       <header className="text-center space-y-2 max-w-xl">
         <h1 className="text-3xl font-semibold tracking-tight text-cyan-300">
-          Sufi → Techno
+          Sacred → Techno
         </h1>
         <p className="text-sm text-zinc-400">
-          수피즘 음악을 업로드하고, 원하는 테크노 컨셉을 선택해 변환하세요.
+          종교음악을 업로드하고, 원하는 테크노 컨셉을 선택해 변환하세요.
         </p>
       </header>
 
       {/* 1. 파일 업로드 */}
       <section className="w-full max-w-xl space-y-3">
-        <StepLabel n={1} title="수피즘 음악 업로드" />
+        <StepLabel n={1} title="종교음악 업로드" />
 
         <label
           className="

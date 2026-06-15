@@ -2,7 +2,7 @@
 
 Ported from the AudioPreprocessor.run_demucs step in the preprocessing
 notebook: a two-stem (vocals / accompaniment) htdemucs split is enough — the
-vocal stem is used both as the MusicGen melody condition and as the chant
+vocal stem is used both as the MusicGen melody condition and as the vocal
 track in the final hybrid mix.
 """
 

@@ -1,4 +1,4 @@
-# Sufi → Techno conversion backend
+# Sacred → Techno conversion backend
 
 FastAPI service that implements the actual conversion pipeline (Demucs vocal
 separation -> feature extraction -> MusicGen-Melody generation -> hybrid mix),
@@ -58,7 +58,7 @@ and plays back the returned `audio/wav`.
 ## Pipeline overview (`pipeline/`)
 
 - `features.py` — extracts BPM and key (Chroma-based) from the uploaded clip.
-- `separation.py` — Demucs two-stem split, returns the isolated vocal/chant stem.
+- `separation.py` — Demucs two-stem split, returns the isolated vocal stem.
 - `prompts.py` — maps each concept id (`powerful`, `groove`, `hypnotic`, `dark`,
   `melodic`, `minimal` — must match `lib/concepts.ts`) to a MusicGen prompt
   template and target BPM.

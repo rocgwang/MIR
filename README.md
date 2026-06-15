@@ -18,7 +18,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## Sufi → Techno conversion
+## Sacred → Techno conversion
 
 The page uploads audio directly (browser to browser-reachable backend) to a
 separate Python/GPU backend that runs Demucs + MusicGen-Melody — this avoids

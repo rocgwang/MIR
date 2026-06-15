@@ -2,7 +2,7 @@
 
 Ported from chant2tech's melody-conditioned generation step: the isolated
 vocal stem is fed in as the melody condition together with a concept-specific
-text prompt, so the generated techno follows the original chant's melodic
+text prompt, so the generated techno follows the original vocal's melodic
 contour.
 """
 

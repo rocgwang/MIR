@@ -1,4 +1,4 @@
-"""Hybrid mix: original chant vocal (time-stretched) over the generated beat.
+"""Hybrid mix: original vocal (time-stretched) over the generated beat.
 
 Ported from chant2tech's create_hybrid_mix.
 """
