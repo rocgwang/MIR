@@ -28,11 +28,15 @@ uvicorn app:app --host 0.0.0.0 --port 8000
 The first request is slow because `facebook/musicgen-melody` (and the Demucs
 model weights) are downloaded and loaded into GPU memory on startup.
 
-### Running on Colab
+### Running on Colab (demo setup)
 
-If you're running this on a Colab GPU notebook instead of a local machine,
-start uvicorn and expose port 8000 with a tunnel (e.g. `ngrok http 8000`),
-then point the frontend at the resulting `https://*.ngrok.io` URL.
+For presentations, run the backend on a Colab Pro GPU runtime and expose it
+through an ngrok **static domain** so the URL never changes between sessions.
+Open [`colab_run.ipynb`](colab_run.ipynb) in Colab and follow the one-time
+setup in the first cell (ngrok auth token + static domain as Colab secrets,
+plus pointing Vercel's `NEXT_PUBLIC_ML_BACKEND_URL` at that domain). After the
+one-time setup, just run all cells before each demo — the deployed site will
+work from any laptop/browser since the heavy lifting happens on Colab's GPU.
 
 ## Wiring up the frontend
 
@@ -46,11 +50,10 @@ NEXT_PUBLIC_ML_BACKEND_URL=http://localhost:8000
 The page uploads audio directly to `${NEXT_PUBLIC_ML_BACKEND_URL}/convert`
 and plays back the returned `audio/wav`.
 
-> `NEXT_PUBLIC_*` env vars are inlined into the JS bundle at build time. On
-> Vercel, set this in the project's environment variables and redeploy
-> whenever the backend URL changes (e.g. a new ngrok tunnel) — a free ngrok
-> URL changes on every restart, so for anything beyond quick testing use a
-> stable hostname (paid ngrok domain, Cloudflare Tunnel, or a hosted GPU box).
+> `NEXT_PUBLIC_*` env vars are inlined into the JS bundle at build time, so
+> Vercel needs a redeploy whenever this value changes. Using an ngrok static
+> domain (see [`colab_run.ipynb`](colab_run.ipynb)) means the URL stays the
+> same across Colab sessions, so this only needs to be set once.
 
 ## Pipeline overview (`pipeline/`)
 
