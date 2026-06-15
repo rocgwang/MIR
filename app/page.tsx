@@ -54,6 +54,15 @@ export default function Home() {
   const handleGenerate = async () => {
     if (!file || !concept) return
 
+    const backendUrl = process.env.NEXT_PUBLIC_ML_BACKEND_URL
+    if (!backendUrl) {
+      setErrorMessage(
+        "NEXT_PUBLIC_ML_BACKEND_URL이 설정되지 않았습니다. backend/README.md를 참고해주세요."
+      )
+      setStatus("error")
+      return
+    }
+
     setStatus("processing")
     setErrorMessage(null)
     if (outputUrl) {
@@ -66,14 +75,23 @@ export default function Home() {
       formData.append("audio", file)
       formData.append("concept", concept)
 
-      const res = await fetch("/api/convert", {
-        method: "POST",
-        body: formData,
-      })
+      // 변환 서버로 직접 업로드한다 (Vercel 서버리스 함수의 요청 본문 크기
+      // 제한을 피하기 위해 /api 라우트를 거치지 않음).
+      let res: Response
+      try {
+        res = await fetch(`${backendUrl}/convert`, {
+          method: "POST",
+          body: formData,
+        })
+      } catch {
+        throw new Error("변환 서버에 연결할 수 없습니다.")
+      }
 
       if (!res.ok) {
         const data = await res.json().catch(() => null)
-        throw new Error(data?.error ?? `요청에 실패했습니다 (status ${res.status})`)
+        throw new Error(
+          data?.detail ?? data?.error ?? `요청에 실패했습니다 (status ${res.status})`
+        )
       }
 
       const blob = await res.blob()

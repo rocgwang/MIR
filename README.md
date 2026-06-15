@@ -20,10 +20,12 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 ## Sufi → Techno conversion
 
-`/api/convert` proxies to a separate Python/GPU backend that runs Demucs +
-MusicGen-Melody. Copy `.env.example` to `.env.local` and point
-`ML_BACKEND_URL` at the running backend. See [backend/README.md](backend/README.md)
-for how to set it up and run it.
+The page uploads audio directly (browser to browser-reachable backend) to a
+separate Python/GPU backend that runs Demucs + MusicGen-Melody — this avoids
+Vercel's serverless function body-size limit, which audio files exceed easily.
+Copy `.env.example` to `.env.local` and point `NEXT_PUBLIC_ML_BACKEND_URL` at
+the running backend. See [backend/README.md](backend/README.md) for how to
+set it up and run it.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

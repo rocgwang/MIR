@@ -5,7 +5,10 @@ separation -> feature extraction -> MusicGen-Melody generation -> hybrid mix),
 adapted from the `dl_for_music_오디오_전처리.py` and `chant2tech` notebooks.
 
 This needs PyTorch + a CUDA GPU, so it runs as a separate process from the
-Next.js app — `app/api/convert/route.ts` proxies requests to it.
+Next.js app. The browser uploads audio **directly** to this server (CORS is
+enabled in `app.py`) rather than through a Next.js API route — that avoids
+Vercel's ~4.5MB serverless function request body limit, which audio files
+exceed easily.
 
 ## Setup
 
@@ -37,12 +40,17 @@ In the `mir-web` root, set:
 
 ```bash
 # .env.local
-ML_BACKEND_URL=http://localhost:8000
+NEXT_PUBLIC_ML_BACKEND_URL=http://localhost:8000
 ```
 
-`app/api/convert/route.ts` will then forward uploads to
-`${ML_BACKEND_URL}/convert` and stream the generated `audio/wav` back to the
-browser.
+The page uploads audio directly to `${NEXT_PUBLIC_ML_BACKEND_URL}/convert`
+and plays back the returned `audio/wav`.
+
+> `NEXT_PUBLIC_*` env vars are inlined into the JS bundle at build time. On
+> Vercel, set this in the project's environment variables and redeploy
+> whenever the backend URL changes (e.g. a new ngrok tunnel) — a free ngrok
+> URL changes on every restart, so for anything beyond quick testing use a
+> stable hostname (paid ngrok domain, Cloudflare Tunnel, or a hosted GPU box).
 
 ## Pipeline overview (`pipeline/`)
 

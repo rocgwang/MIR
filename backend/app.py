@@ -3,8 +3,10 @@
 Run with (GPU required):
     uvicorn app:app --host 0.0.0.0 --port 8000
 
-The Next.js app proxies /api/convert requests here via the ML_BACKEND_URL
-environment variable. See backend/README.md for setup.
+The frontend uploads audio directly to this server's /convert endpoint via
+the NEXT_PUBLIC_ML_BACKEND_URL environment variable (not through a Next.js
+API route, to avoid Vercel's serverless function body-size limit). See
+backend/README.md for setup.
 """
 
 import shutil
@@ -13,6 +15,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
 from pipeline.generation import MusicGenerator
@@ -30,6 +33,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+# The frontend (e.g. a Vercel deployment) calls this API directly from the
+# browser, so it needs to be reachable cross-origin.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["POST"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/convert")
