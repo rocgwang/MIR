@@ -18,6 +18,13 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Sufi → Techno conversion
+
+`/api/convert` proxies to a separate Python/GPU backend that runs Demucs +
+MusicGen-Melody. Copy `.env.example` to `.env.local` and point
+`ML_BACKEND_URL` at the running backend. See [backend/README.md](backend/README.md)
+for how to set it up and run it.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

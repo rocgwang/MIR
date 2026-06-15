@@ -7,6 +7,10 @@ import { isConceptId } from "@/lib/concepts"
 //   - concept: lib/concepts.ts 의 CONCEPT_IDS 중 하나
 // 응답(성공): 변환된 오디오 바이너리 (Content-Type: audio/*)
 // 응답(실패): { error: string } JSON, 4xx/5xx
+//
+// 실제 변환(Demucs 분리 -> MusicGen 생성 -> 믹스)은 GPU가 필요해 별도의
+// Python 백엔드(backend/)에서 수행하고, 이 라우트는 ML_BACKEND_URL로
+// 요청을 그대로 전달한다. 설정 방법은 backend/README.md 참고.
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData()
@@ -28,21 +32,47 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // ---------------------------------------------------------------------
-  // TODO(backend): 여기에 실제 음악 생성 모델 연동 코드를 작성합니다.
-  //   입력: audio (File), concept (ConceptId)
-  //   출력: 변환된 오디오의 바이너리(ArrayBuffer/Buffer)와 MIME 타입
-  // 아래의 echo 구현은 모델이 도착하기 전까지 프런트엔드 플로우
-  // (업로드 -> 컨셉 선택 -> 생성 -> 재생)를 테스트하기 위한 임시 동작입니다.
-  // ---------------------------------------------------------------------
-  const outputBuffer = await audio.arrayBuffer()
-  const outputType = audio.type || "audio/mpeg"
+  const backendUrl = process.env.ML_BACKEND_URL
+  if (!backendUrl) {
+    return NextResponse.json(
+      { error: "ML_BACKEND_URL이 설정되지 않았습니다. backend/README.md를 참고해 변환 서버를 실행하고 환경변수를 설정해주세요." },
+      { status: 503 }
+    )
+  }
+
+  const backendForm = new FormData()
+  backendForm.append("audio", audio, audio.name)
+  backendForm.append("concept", concept)
+
+  let backendResponse: Response
+  try {
+    backendResponse = await fetch(`${backendUrl}/convert`, {
+      method: "POST",
+      body: backendForm,
+    })
+  } catch {
+    return NextResponse.json(
+      { error: "변환 서버에 연결할 수 없습니다." },
+      { status: 502 }
+    )
+  }
+
+  if (!backendResponse.ok) {
+    const message = await backendResponse.text().catch(() => "")
+    return NextResponse.json(
+      { error: message || "변환 중 오류가 발생했습니다." },
+      { status: backendResponse.status }
+    )
+  }
+
+  const outputBuffer = await backendResponse.arrayBuffer()
+  const outputType = backendResponse.headers.get("Content-Type") ?? "audio/wav"
 
   return new NextResponse(outputBuffer, {
     status: 200,
     headers: {
       "Content-Type": outputType,
-      "Content-Disposition": `inline; filename="techno-${concept}-${audio.name}"`,
+      "Content-Disposition": `inline; filename="techno-${concept}.wav"`,
     },
   })
 }
