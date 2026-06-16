@@ -81,18 +81,19 @@ class MusicGenerator:
 
     def _resolve_adapter(self) -> str:
         path = os.getenv("LORA_ADAPTER_PATH", "/tmp/lora_adapters")
+        os.makedirs(path, exist_ok=True)
         safetensors = os.path.join(path, "adapter_model.safetensors")
         if not os.path.exists(safetensors):
             import gdown
-            os.makedirs(path, exist_ok=True)
             file_id = os.getenv("LORA_ADAPTER_FILE_ID", _ADAPTER_FILE_ID)
             gdown.download(
                 f"https://drive.google.com/uc?id={file_id}",
                 output=safetensors,
                 quiet=False,
             )
-            with open(os.path.join(path, "adapter_config.json"), "w") as f:
-                json.dump(_ADAPTER_CONFIG, f, indent=2)
+        # always overwrite — pre-download cell writes safetensors but not config
+        with open(os.path.join(path, "adapter_config.json"), "w") as f:
+            json.dump(_ADAPTER_CONFIG, f, indent=2)
         return path
 
     def generate(self, prompt: str, target_bpm: int, total_len: int) -> np.ndarray:

@@ -26,14 +26,18 @@ def create_mix(
 ) -> Path:
     sc = _sidechain_env(total_len, sec_per_beat, n_bars)
 
-    mix = (
-        0.95 * _fit(drums, total_len)
-        + 0.20 * (_fit(bass, total_len) * sc)
-        + 0.75 * (_fit(techno_instr, total_len) * sc)
-        + 0.80 * (_fit(chop_track, total_len) * sc)
-    )
+    def _norm(x: np.ndarray, peak: float) -> np.ndarray:
+        return x / (np.max(np.abs(x)) + 1e-9) * peak
+
+    drm = _norm(_fit(drums,        total_len), 0.95)
+    bas = _norm(_fit(bass,         total_len), 0.90)
+    ins = _norm(_fit(techno_instr, total_len), 0.90)
+    chp = _norm(_fit(chop_track,   total_len), 0.90)
+
+    mix = 0.95 * drm + 0.20 * (bas * sc) + 0.75 * (ins * sc) + 0.80 * (chp * sc)
+    mix = _norm(mix, 0.9)
     mix = np.tanh(mix * 1.1)
-    mix = mix / (np.max(np.abs(mix)) + 1e-9) * 0.97
+    mix = _norm(mix, 0.97)
 
     sf.write(str(output_path), mix, SR)
     return output_path
