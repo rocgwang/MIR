@@ -6,6 +6,7 @@ torchaudio
 transformers
 accelerate
 peft
+torchao>=0.16.0
 gdown
 demucs
 librosa
