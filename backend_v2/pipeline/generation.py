@@ -74,15 +74,21 @@ _ADAPTER_CONFIG = {
 class MusicGenerator:
     def __init__(self, device: str = "cuda"):
         self.device = device
-        adapter_path = self._resolve_adapter()
         self.processor = AutoProcessor.from_pretrained(MODEL_NAME)
         base = MusicgenForConditionalGeneration.from_pretrained(MODEL_NAME).to(device)
-        self.model = PeftModel.from_pretrained(base, adapter_path).eval()
-        import peft
-        st = os.path.join(adapter_path, "adapter_model.safetensors")
-        st_size = os.path.getsize(st) if os.path.exists(st) else -1
-        print(f"[gen] peft={peft.__version__} model={type(self.model).__name__} "
-              f"adapter={adapter_path} safetensors_bytes={st_size}", flush=True)
+
+        use_lora = os.getenv("LORA_ENABLED", "1") != "0"
+        if use_lora:
+            adapter_path = self._resolve_adapter()
+            self.model = PeftModel.from_pretrained(base, adapter_path).eval()
+            import peft
+            st = os.path.join(adapter_path, "adapter_model.safetensors")
+            st_size = os.path.getsize(st) if os.path.exists(st) else -1
+            print(f"[gen] LoRA ON  peft={peft.__version__} adapter={adapter_path} "
+                  f"safetensors_bytes={st_size}", flush=True)
+        else:
+            self.model = base.eval()
+            print("[gen] LoRA OFF — base model only", flush=True)
 
     def _resolve_adapter(self) -> str:
         path = os.getenv("LORA_ADAPTER_PATH", "/tmp/lora_adapters")
