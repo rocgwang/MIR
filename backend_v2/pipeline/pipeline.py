@@ -9,9 +9,12 @@
 6. Sidechain-mix drums + instrumental + chops into the final WAV.
 """
 
+import random
 from pathlib import Path
 
 import librosa
+import numpy as np
+import torch
 
 from .drums import build_drum_track
 from .features import extract_features
@@ -30,6 +33,10 @@ def convert_to_techno(
     concept_id: str,
     generator: MusicGenerator,
 ) -> Path:
+    torch.manual_seed(42)
+    np.random.seed(42)
+    random.seed(42)
+
     vocals_path, no_vocals_path = separate(input_path, work_dir / "demucs")
 
     y, sr = librosa.load(str(work_dir / "demucs" / "input_cropped.wav"), sr=SR, mono=True)
