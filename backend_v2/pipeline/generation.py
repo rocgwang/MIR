@@ -1,29 +1,74 @@
-"""LoRA-fine-tuned MusicGen-Medium generation (v2).
+"""LoRA-fine-tuned MusicGen-Melody generation (v2).
 
-Text-only generation (no melody conditioning). A 4-bar loop is generated
-and cross-fade tiled to fill the full track length.
+Text-only generation (no melody audio conditioning). A 4-bar loop is
+generated and cross-fade tiled to fill the full track length.
 
-Adapter location is resolved from env vars:
-  LORA_ADAPTER_PATH       — local directory (default /tmp/lora_adapters)
-  LORA_ADAPTER_GDRIVE_URL — Google Drive folder URL, downloaded on first run
+Adapter weights are resolved from env vars:
+  LORA_ADAPTER_PATH        — local directory (default /tmp/lora_adapters)
+  LORA_ADAPTER_FILE_ID     — Google Drive file ID for adapter_model.safetensors
 """
 
+import json
 import os
 
 import librosa
 import numpy as np
 import torch
 from peft import PeftModel
-from transformers import AutoProcessor, MusicgenForConditionalGeneration
+from transformers import AutoProcessor, MusicgenMelodyForConditionalGeneration
 from transformers import logging as transformers_logging
 
 transformers_logging.set_verbosity_error()
 
-MODEL_NAME = "facebook/musicgen-medium"
+MODEL_NAME = "facebook/musicgen-melody"
 LOOP_BARS = 4
 OUTPUT_SR = 44100
 
-_GDRIVE_URL = "https://drive.google.com/drive/folders/1cxKcfxQB7GTl4IEX71e09wVE0oTXPwCU?usp=sharing"
+_ADAPTER_FILE_ID = "1SVLKKA5PAoKFHzmMYKMTmwPbzKqbzhQQ"
+
+_ADAPTER_CONFIG = {
+    "alora_invocation_tokens": None,
+    "alpha_pattern": {},
+    "arrow_config": None,
+    "auto_mapping": {
+        "base_model_class": "MusicgenMelodyForConditionalGeneration",
+        "parent_library": "transformers.models.musicgen_melody.modeling_musicgen_melody",
+    },
+    "base_model_name_or_path": "facebook/musicgen-melody",
+    "bias": "none",
+    "corda_config": None,
+    "ensure_weight_tying": False,
+    "eva_config": None,
+    "exclude_modules": None,
+    "fan_in_fan_out": False,
+    "inference_mode": True,
+    "init_lora_weights": True,
+    "layer_replication": None,
+    "layers_pattern": None,
+    "layers_to_transform": None,
+    "loftq_config": {},
+    "lora_alpha": 16,
+    "lora_bias": False,
+    "lora_dropout": 0.05,
+    "lora_ga_config": None,
+    "megatron_config": None,
+    "megatron_core": "megatron.core",
+    "modules_to_save": None,
+    "peft_type": "LORA",
+    "peft_version": "0.19.1",
+    "qalora_group_size": 16,
+    "r": 8,
+    "rank_pattern": {},
+    "revision": None,
+    "target_modules": ["v_proj", "q_proj"],
+    "target_parameters": None,
+    "task_type": None,
+    "trainable_token_indices": None,
+    "use_bdlora": None,
+    "use_dora": False,
+    "use_qalora": False,
+    "use_rslora": False,
+}
 
 
 class MusicGenerator:
@@ -31,15 +76,23 @@ class MusicGenerator:
         self.device = device
         adapter_path = self._resolve_adapter()
         self.processor = AutoProcessor.from_pretrained(MODEL_NAME)
-        base = MusicgenForConditionalGeneration.from_pretrained(MODEL_NAME).to(device)
+        base = MusicgenMelodyForConditionalGeneration.from_pretrained(MODEL_NAME).to(device)
         self.model = PeftModel.from_pretrained(base, adapter_path).eval()
 
     def _resolve_adapter(self) -> str:
         path = os.getenv("LORA_ADAPTER_PATH", "/tmp/lora_adapters")
-        if not os.path.exists(path):
+        safetensors = os.path.join(path, "adapter_model.safetensors")
+        if not os.path.exists(safetensors):
             import gdown
-            url = os.getenv("LORA_ADAPTER_GDRIVE_URL", _GDRIVE_URL)
-            gdown.download_folder(url, output=path, quiet=False)
+            os.makedirs(path, exist_ok=True)
+            file_id = os.getenv("LORA_ADAPTER_FILE_ID", _ADAPTER_FILE_ID)
+            gdown.download(
+                f"https://drive.google.com/uc?id={file_id}",
+                output=safetensors,
+                quiet=False,
+            )
+            with open(os.path.join(path, "adapter_config.json"), "w") as f:
+                json.dump(_ADAPTER_CONFIG, f, indent=2)
         return path
 
     def generate(self, prompt: str, target_bpm: int, total_len: int) -> np.ndarray:
