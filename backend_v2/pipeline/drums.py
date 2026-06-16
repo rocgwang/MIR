@@ -35,9 +35,15 @@ def _synth_kick(dur: float = 0.35, f0: float = 130.0, f1: float = 45.0) -> np.nd
     t = np.linspace(0, dur, int(SR * dur), endpoint=False)
     f = f1 + (f0 - f1) * np.exp(-t * 35)
     phase = 2 * np.pi * np.cumsum(f) / SR
-    return np.sin(phase) * np.exp(-t * 7)
+    k = np.sin(phase) * np.exp(-t * 7)
+    fo = int(SR * 0.005)
+    k[-fo:] *= np.linspace(1, 0, fo)
+    return k
 
 
 def _synth_hat(dur: float = 0.05) -> np.ndarray:
     t = np.linspace(0, dur, int(SR * dur), endpoint=False)
-    return np.random.randn(len(t)) * np.exp(-t * 90) * 0.4
+    h = np.random.randn(len(t)) * np.exp(-t * 90) * 0.4
+    fo = int(SR * 0.003)
+    h[-fo:] *= np.linspace(1, 0, fo)
+    return h

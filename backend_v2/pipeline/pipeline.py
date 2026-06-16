@@ -2,11 +2,12 @@
 
 1. Crop input to 3 min and run Demucs two-stem split.
 2. Extract key from cropped audio for concept-specific prompt.
-3. Generate techno instrumental via LoRA MusicGen, melody-conditioned on
-   the no_vocals stem.
-4. Build vocal chop track from onset-sliced vocal fragments.
-5. Synthesize a four-on-the-floor kick + hihat drum pattern.
-6. Sidechain-mix drums + instrumental + chops into the final WAV.
+3. Generate techno instrumental via LoRA MusicGen-Medium (text-only, 4-bar
+   loop tiled to full length).
+4. Synthesize a harmony-tracking bass line from the instrumental's chroma.
+5. Build vocal chop track from onset-sliced vocal fragments.
+6. Synthesize a four-on-the-floor kick + hihat drum pattern.
+7. Sidechain-mix drums + bass + instrumental + chops into the final WAV.
 """
 
 import random
@@ -16,6 +17,7 @@ import librosa
 import numpy as np
 import torch
 
+from .bass import build_bass_track
 from .drums import build_drum_track
 from .features import extract_features
 from .generation import MusicGenerator
@@ -47,7 +49,8 @@ def convert_to_techno(
     sec_per_beat = 60.0 / target_bpm
     total_len = int(N_BARS * 4 * sec_per_beat * SR)
 
-    techno_instr = generator.generate(no_vocals_path, prompt, target_bpm)
+    techno_instr = generator.generate(prompt, target_bpm, total_len)
+    bass = build_bass_track(techno_instr, total_len, sec_per_beat, N_BARS)
     chop_track = build_chop_track(vocals_path, total_len, sec_per_beat, N_BARS)
     drums = build_drum_track(total_len, sec_per_beat, N_BARS)
 
@@ -56,6 +59,7 @@ def convert_to_techno(
         drums=drums,
         techno_instr=techno_instr,
         chop_track=chop_track,
+        bass=bass,
         total_len=total_len,
         sec_per_beat=sec_per_beat,
         n_bars=N_BARS,
