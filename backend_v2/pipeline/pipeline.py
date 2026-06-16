@@ -33,9 +33,9 @@ def convert_to_techno(
     concept_id: str,
     generator: MusicGenerator,
 ) -> Path:
-    torch.manual_seed(42)
-    np.random.seed(42)
-    random.seed(42)
+    torch.manual_seed(7)
+    np.random.seed(7)
+    random.seed(7)
 
     vocals_path, no_vocals_path = separate(input_path, work_dir / "demucs")
 
