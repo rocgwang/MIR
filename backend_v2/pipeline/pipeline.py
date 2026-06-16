@@ -1,12 +1,8 @@
 """End-to-end Sacred -> Techno v2 conversion pipeline."""
 
-import random
 from pathlib import Path
 
-import librosa
 import numpy as np
-import torch
-from transformers import set_seed as hf_set_seed
 
 from .bass import build_bass_track
 from .drums import build_drum_track
@@ -26,13 +22,6 @@ def convert_to_techno(
     concept_id: str,
     generator: MusicGenerator,
 ) -> Path:
-    hf_set_seed(SEED)
-    random.seed(SEED)
-    np.random.seed(SEED)
-    torch.manual_seed(SEED)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(SEED)
-
     vocals_path, no_vocals_path = separate(input_path, work_dir / "demucs")
 
     prompt = build_prompt(concept_id)
@@ -40,7 +29,7 @@ def convert_to_techno(
     sec_per_beat = 60.0 / target_bpm
     total_len = int(N_BARS * 4 * sec_per_beat * SR)
 
-    techno_instr = generator.generate(prompt, target_bpm, total_len)
+    techno_instr = generator.generate(prompt, target_bpm, total_len, seed=SEED)
     bass = build_bass_track(techno_instr, total_len, sec_per_beat, N_BARS)
     chop_track = build_chop_track(vocals_path, total_len, sec_per_beat, N_BARS)
     drums = build_drum_track(total_len, sec_per_beat, N_BARS)

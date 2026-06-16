@@ -78,6 +78,11 @@ class MusicGenerator:
         self.processor = AutoProcessor.from_pretrained(MODEL_NAME)
         base = MusicgenForConditionalGeneration.from_pretrained(MODEL_NAME).to(device)
         self.model = PeftModel.from_pretrained(base, adapter_path).eval()
+        import peft
+        st = os.path.join(adapter_path, "adapter_model.safetensors")
+        st_size = os.path.getsize(st) if os.path.exists(st) else -1
+        print(f"[gen] peft={peft.__version__} model={type(self.model).__name__} "
+              f"adapter={adapter_path} safetensors_bytes={st_size}", flush=True)
 
     def _resolve_adapter(self) -> str:
         path = os.getenv("LORA_ADAPTER_PATH", "/tmp/lora_adapters")
@@ -96,7 +101,16 @@ class MusicGenerator:
             json.dump(_ADAPTER_CONFIG, f, indent=2)
         return path
 
-    def generate(self, prompt: str, target_bpm: int, total_len: int) -> np.ndarray:
+    def generate(self, prompt: str, target_bpm: int, total_len: int, seed: int = 42) -> np.ndarray:
+        from transformers import set_seed as hf_set_seed
+        import random
+        hf_set_seed(seed)
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
         sec_per_beat = 60.0 / target_bpm
         loop_sec = LOOP_BARS * 4 * sec_per_beat
         loop_len = int(loop_sec * OUTPUT_SR)
@@ -120,6 +134,8 @@ class MusicGenerator:
 
         out_sr = self.model.config.audio_encoder.sampling_rate
         raw = audio_values[0, 0].cpu().float().numpy()
+        print(f"[gen] out_sr={out_sr} raw_shape={raw.shape} "
+              f"peak={float(np.max(np.abs(raw))):.4f}", flush=True)
         loop = librosa.resample(raw, orig_sr=out_sr, target_sr=OUTPUT_SR)
         loop = loop[:loop_len]
         loop = loop / (np.max(np.abs(loop)) + 1e-9) * 0.95
