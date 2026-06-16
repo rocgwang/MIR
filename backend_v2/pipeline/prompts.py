@@ -1,7 +1,11 @@
-"""Concept -> MusicGen prompt mapping (shared with backend_v1)."""
+"""Concept -> MusicGen prompt mapping (v2)."""
 
 from dataclasses import dataclass
 
+_BASE = (
+    "hypnotic driving techno, four-on-the-floor kick, deep analog bassline, "
+    "hypnotic synth stabs, warehouse reverb, no vocals, 128 bpm"
+)
 
 @dataclass(frozen=True)
 class ConceptPrompt:
@@ -9,64 +13,35 @@ class ConceptPrompt:
     template: str
 
 
-_SUFFIX = (
-    "Key of {key}, {bpm} BPM, perfectly quantized, instrumental, "
-    "no vocals, no singing, studio quality production"
-)
-
 CONCEPT_PROMPTS: dict[str, ConceptPrompt] = {
     "powerful": ConceptPrompt(
-        target_bpm=138,
-        template=(
-            "Powerful peak-time techno with massive pounding kick drums and an "
-            "aggressive driving sub-bass, raw energetic warehouse rave atmosphere, "
-            "hard-hitting percussion, " + _SUFFIX
-        ),
+        target_bpm=128,
+        template=_BASE,
     ),
     "groove": ConceptPrompt(
-        target_bpm=124,
-        template=(
-            "Groovy funky techno with a rolling syncopated bassline and tight "
-            "swung percussion, danceable funk-driven rhythm, warm analog groove, "
-            + _SUFFIX
-        ),
+        target_bpm=128,
+        template=_BASE + ", syncopated groove, swung percussion, funky rhythm",
     ),
     "hypnotic": ConceptPrompt(
-        target_bpm=130,
-        template=(
-            "Hypnotic minimal techno with repetitive looping arpeggios and a "
-            "trance-inducing four-on-the-floor pulse, deep meditative atmosphere, "
-            "gradually evolving textures, " + _SUFFIX
-        ),
+        target_bpm=128,
+        template=_BASE + ", deep repetitive loops, meditative trance pulse",
     ),
     "dark": ConceptPrompt(
-        target_bpm=134,
-        template=(
-            "Dark industrial techno with distorted metallic textures and an "
-            "ominous brooding atmosphere, raw mechanical rhythm, shadowy "
-            "soundscape, " + _SUFFIX
-        ),
+        target_bpm=128,
+        template=_BASE + ", dark industrial textures, distorted metallic sounds",
     ),
     "melodic": ConceptPrompt(
-        target_bpm=126,
-        template=(
-            "Melodic techno with ethereal atmospheric synth layers and emotional "
-            "evolving chord progressions, cinematic and spiritual mood, " + _SUFFIX
-        ),
+        target_bpm=128,
+        template=_BASE + ", melodic atmospheric synths, emotional chord progressions",
     ),
     "minimal": ConceptPrompt(
-        target_bpm=122,
-        template=(
-            "Minimal deep techno with a sparse stripped-back arrangement and "
-            "subtle textures, spacious deep groove, understated and atmospheric, "
-            + _SUFFIX
-        ),
+        target_bpm=128,
+        template=_BASE + ", minimal sparse arrangement, spacious deep groove",
     ),
 }
 
 CONCEPT_IDS = list(CONCEPT_PROMPTS.keys())
 
 
-def build_prompt(concept_id: str, key: str) -> str:
-    concept = CONCEPT_PROMPTS[concept_id]
-    return concept.template.format(key=key, bpm=concept.target_bpm)
+def build_prompt(concept_id: str) -> str:
+    return CONCEPT_PROMPTS[concept_id].template

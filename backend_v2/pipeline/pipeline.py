@@ -1,14 +1,4 @@
-"""End-to-end Sacred -> Techno v2 conversion pipeline.
-
-1. Crop input to 3 min and run Demucs two-stem split.
-2. Extract key from cropped audio for concept-specific prompt.
-3. Generate techno instrumental via LoRA MusicGen-Medium (text-only, 4-bar
-   loop tiled to full length).
-4. Synthesize a harmony-tracking bass line from the instrumental's chroma.
-5. Build vocal chop track from onset-sliced vocal fragments.
-6. Synthesize a four-on-the-floor kick + hihat drum pattern.
-7. Sidechain-mix drums + bass + instrumental + chops into the final WAV.
-"""
+"""End-to-end Sacred -> Techno v2 conversion pipeline."""
 
 import random
 from pathlib import Path
@@ -16,10 +6,10 @@ from pathlib import Path
 import librosa
 import numpy as np
 import torch
+from transformers import set_seed as hf_set_seed
 
 from .bass import build_bass_track
 from .drums import build_drum_track
-from .features import extract_features
 from .generation import MusicGenerator
 from .mixing import SR, create_mix
 from .prompts import CONCEPT_PROMPTS, build_prompt
@@ -27,6 +17,7 @@ from .separation import separate
 from .vocal_chop import build_chop_track
 
 N_BARS = 8
+SEED = 42
 
 
 def convert_to_techno(
@@ -35,16 +26,16 @@ def convert_to_techno(
     concept_id: str,
     generator: MusicGenerator,
 ) -> Path:
-    torch.manual_seed(42)
-    np.random.seed(42)
-    random.seed(42)
+    hf_set_seed(SEED)
+    random.seed(SEED)
+    np.random.seed(SEED)
+    torch.manual_seed(SEED)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(SEED)
 
     vocals_path, no_vocals_path = separate(input_path, work_dir / "demucs")
 
-    y, sr = librosa.load(str(work_dir / "demucs" / "input_cropped.wav"), sr=SR, mono=True)
-    features = extract_features(y, sr)
-
-    prompt = build_prompt(concept_id, features["key"])
+    prompt = build_prompt(concept_id)
     target_bpm = CONCEPT_PROMPTS[concept_id].target_bpm
     sec_per_beat = 60.0 / target_bpm
     total_len = int(N_BARS * 4 * sec_per_beat * SR)
