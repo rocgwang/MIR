@@ -15,12 +15,12 @@ import librosa
 import numpy as np
 import torch
 from peft import PeftModel
-from transformers import AutoProcessor, MusicgenMelodyForConditionalGeneration
+from transformers import AutoProcessor, MusicgenForConditionalGeneration
 from transformers import logging as transformers_logging
 
 transformers_logging.set_verbosity_error()
 
-MODEL_NAME = "facebook/musicgen-small"
+MODEL_NAME = "facebook/musicgen-medium"
 LOOP_BARS = 4
 OUTPUT_SR = 44100
 
@@ -31,10 +31,10 @@ _ADAPTER_CONFIG = {
     "alpha_pattern": {},
     "arrow_config": None,
     "auto_mapping": {
-        "base_model_class": "MusicgenMelodyForConditionalGeneration",
-        "parent_library": "transformers.models.musicgen_melody.modeling_musicgen_melody",
+        "base_model_class": "MusicgenForConditionalGeneration",
+        "parent_library": "transformers.models.musicgen.modeling_musicgen",
     },
-    "base_model_name_or_path": "facebook/musicgen-small",
+    "base_model_name_or_path": "facebook/musicgen-medium",
     "bias": "none",
     "corda_config": None,
     "ensure_weight_tying": False,
@@ -76,7 +76,7 @@ class MusicGenerator:
         self.device = device
         adapter_path = self._resolve_adapter()
         self.processor = AutoProcessor.from_pretrained(MODEL_NAME)
-        base = MusicgenMelodyForConditionalGeneration.from_pretrained(MODEL_NAME).to(device)
+        base = MusicgenForConditionalGeneration.from_pretrained(MODEL_NAME).to(device)
         self.model = PeftModel.from_pretrained(base, adapter_path).eval()
 
     def _resolve_adapter(self) -> str:
