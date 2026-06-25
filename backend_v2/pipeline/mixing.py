@@ -34,7 +34,7 @@ def create_mix(
     ins = _norm(_fit(techno_instr, total_len), 0.90)
     chp = _norm(_fit(chop_track,   total_len), 0.90)
 
-    mix = 0.95 * drm + 0.20 * (bas * sc) + 0.75 * (ins * sc) + 0.80 * (chp * sc)
+    mix = 0.95 * drm + 0.50 * (bas * sc) + 0.75 * (ins * sc) + 0.80 * (chp * sc)
     mix = _norm(mix, 0.9)
     mix = np.tanh(mix * 1.1)
     mix = _norm(mix, 0.97)

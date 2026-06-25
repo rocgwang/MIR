@@ -1,27 +1,25 @@
 """Vocal chop synthesis.
 
-Detects onsets in the isolated vocal stem, slices them into short chops with
-a fast-attack / exponential-decay envelope, then places them on the offbeat
-16th-note positions of the output grid — percussive stab effect.
+Detects onsets directly in the (mixed) input audio, slices them into short
+chops with a fast-attack / exponential-decay envelope, then places them on
+the sparse 16th-note grid positions that leave room for the kick — a
+percussive stab effect.
 """
 
-from pathlib import Path
-
-import librosa
 import numpy as np
+import librosa
 
 SR = 44100
-OFFBEAT_PATTERN = [2, 3, 6, 7, 10, 11, 14, 15]
+CHOP_PATTERN = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1]
 
 
 def build_chop_track(
-    vocals_path: Path,
+    input_audio: np.ndarray,
     total_len: int,
     sec_per_beat: float,
     n_bars: int = 8,
 ) -> np.ndarray:
-    v, _ = librosa.load(str(vocals_path), sr=SR, mono=True)
-    chops = _extract_chops(v)
+    chops = _extract_chops(input_audio)
     return _place_on_grid(chops, total_len, sec_per_beat, n_bars)
 
 
@@ -57,7 +55,9 @@ def _place_on_grid(
         return track
     ci = 0
     for bar in range(n_bars):
-        for stp in OFFBEAT_PATTERN:
+        for stp in range(steps_bar):
+            if not CHOP_PATTERN[stp]:
+                continue
             chop = chops[ci % len(chops)]
             ci += 1
             pos = int(((bar * steps_bar) + stp) * step_len * SR)
